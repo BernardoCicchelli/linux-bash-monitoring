@@ -19,17 +19,21 @@ Exibe nome da máquina, usuário logado, sistema operacional, versão do kernel,
 - Ver modelo do processador
 - Ver número de núcleos
 - Ver uso atual da CPU em tempo real
+
 **3. Monitorar Memória**
 - Ver uso de memória RAM (total, usada e livre)
 - Ver uso de Swap
+
 **4. Verificar Espaço em Disco**
 - Listar todas as partições do sistema
 - Ver tamanho de um diretório específico
 - Verificar partições com uso acima de um percentual definido pelo usuário
+
 **5. Gerenciar Processos**
 - Listar os N processos com maior consumo de CPU
 - Buscar processo por nome
 - Encerrar processo por PID
+
 **6. Finalizar** — única forma de encerrar o script.
  
 ---
