@@ -26,16 +26,16 @@ exibir_cabecalho() {
 
     echo "###############################################################"
     echo "# IBMEC                                                       #"
-    printf "# Sistemas Operacionais              Semestre %s de %s        #\n" "$SEM" "$ANO"
-    echo "# Código: IBM8940                    Turma: 8001             #"
-    echo "# Professor: Luiz Fernando T. de Farias                      #"
+    printf "# Sistemas Operacionais              Semestre %s de %s       #\n" "$SEM" "$ANO"
+    echo "# Código: IBM8940                    Turma: 8001              #"
+    echo "# Professor: Luiz Fernando T. de Farias                       #"
     echo "#-------------------------------------------------------------#"
     echo "# Equipe Desenvolvedora:                                      #"
-    printf "# Aluno: %-52s #\n" "Arthur Riess Cunha"
-    printf "# Aluno: %-52s #\n" "Bernardo Cicchelli"
+    echo "# Aluno: Arthur Riess Cunha                                   #"
+    echo "# Aluno: Bernardo Cicchelli                                   #"
     echo "#-------------------------------------------------------------#"
-    printf "# Rio de Janeiro, %s de %s de %s                    #\n" "$DIA" "$MES" "$ANO"
-    printf "# Hora do Sistema: %s Horas e %s Minutos                    #\n" "$HORA" "$MIN"
+    printf "# Rio de Janeiro, %s de %s de %s                           #\n" "$DIA" "$MES" "$ANO"
+    printf "# Hora do Sistema: %s Horas e %s Minutos                      #\n" "$HORA" "$MIN"
     echo "###############################################################"
     echo ""
 }
@@ -109,7 +109,6 @@ submenu_cpu() {
             1)
                 echo ""
                 echo "--- Modelo do Processador ---"
-                # Lê diretamente do arquivo de informações do kernel
                 grep "model name" /proc/cpuinfo | head -1 | cut -d: -f2 | sed 's/^ //'
                 pausar
                 ;;
@@ -123,7 +122,6 @@ submenu_cpu() {
             3)
                 echo ""
                 echo "--- Uso Atual da CPU ---"
-                # Obtém uso da CPU via top em modo batch (execução única)
                 USO=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}')
                 echo "Uso atual da CPU: ${USO}%"
                 pausar
@@ -202,7 +200,6 @@ submenu_disco() {
             1)
                 echo ""
                 echo "--- Partições do Sistema ---"
-                # Exibe partições reais, excluindo sistemas virtuais
                 df -h --output=source,size,used,avail,pcent,target | grep -v "tmpfs\|udev\|Filesystem" | awk 'NR==1{print "DISPOSITIVO      TOTAL    USADO   LIVRE   USO%  PONTO DE MONTAGEM"} NR>0{print}'
                 df -h | grep -v "tmpfs\|udev"
                 pausar
@@ -211,7 +208,6 @@ submenu_disco() {
                 echo ""
                 echo -n "Digite o caminho do diretório (ex: /home): "
                 read DIRETORIO
-                # Verifica se o diretório existe antes de executar
                 if [ -d "$DIRETORIO" ]; then
                     echo ""
                     echo "--- Tamanho de $DIRETORIO ---"
@@ -232,11 +228,15 @@ submenu_disco() {
                 fi
                 echo ""
                 echo "--- Partições com uso acima de ${LIMITE_DISCO}% ---"
-                # Filtra partições que ultrapassam o limite definido pelo usuário
-                df -h | awk -v limite="$LIMITE_DISCO" 'NR>1 {
+                RESULTADO_DISCO=$(df -h | awk -v limite="$LIMITE_DISCO" 'NR>1 {
                     gsub(/%/, "", $5)
                     if ($5+0 >= limite+0) print $0
-                }'
+                }')
+                if [ -z "$RESULTADO_DISCO" ]; then
+                    echo "Nenhuma partição com uso acima de ${LIMITE_DISCO}%."
+                else
+                    echo "$RESULTADO_DISCO"
+                fi
                 pausar
                 ;;
             4)
@@ -291,12 +291,11 @@ submenu_processos() {
                 read NOME_PROC
                 echo ""
                 echo "--- Processos com nome '$NOME_PROC' ---"
-                # Busca processo pelo nome, excluindo o próprio grep da listagem
-                RESULTADO=$(ps aux | grep "$NOME_PROC" | grep -v grep)
+                RESULTADO=$(ps aux | awk -v proc="$NOME_PROC" '$11 ~ proc {printf "PID: %-8s CPU: %-6s MEM: %-6s CMD: %s\n", $2, $3, $4, $11}')
                 if [ -z "$RESULTADO" ]; then
                     echo "Nenhum processo encontrado com esse nome."
                 else
-                    echo "$RESULTADO" | awk '{printf "PID: %-8s CPU: %-6s MEM: %-6s CMD: %s\n", $2, $3, $4, $11}'
+                    echo "$RESULTADO"
                 fi
                 pausar
                 ;;
@@ -309,7 +308,6 @@ submenu_processos() {
                     pausar
                     continue
                 fi
-                # Verifica se o processo existe antes de tentar encerrar
                 if ps -p "$PID_PROC" > /dev/null 2>&1; then
                     kill "$PID_PROC"
                     echo "Processo $PID_PROC encerrado com sucesso."
